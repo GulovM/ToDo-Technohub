@@ -82,8 +82,13 @@ func (t *Task) Delete() {
 	delete(Tasks, t.ID)
 }
 
-func Read(id int) Task {
-	return Tasks[id]
+func Read(taskID int) Task {
+	for _, v := range Tasks {
+		if v.UserTaskID == taskID {
+			return v
+		}
+	}
+	return Task{}
 }
 
 func AllTasks(UserID int) {
