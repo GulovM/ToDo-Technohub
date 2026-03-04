@@ -2,22 +2,24 @@ package user
 
 import (
 	"fmt"
+	"strconv"
 	"todo/task"
 )
 
 func ActionsFlow(u User) {
 	for {
-		var choice uint8
+		var choice string
 		fmt.Println("Выберите действие:")
 		fmt.Print("1. Задачи\n2. Настройки\n0. Выйти\n>> ")
-		fmt.Scan(&choice)
-		switch choice {
+		task.Reader(&choice)
+		ch, _ := strconv.Atoi(choice)
+		switch ch {
 		case 1:
 			fmt.Println("Задачи")
 			TasksChoice(u)
 		case 2:
 			fmt.Println("Настройки")
-			SettingsChoice(u)
+			SettingsChoice(&u)
 		case 0:
 			fmt.Println("\nВыход из программы...")
 			return
@@ -27,106 +29,136 @@ func ActionsFlow(u User) {
 	}
 }
 
-func TasksChoice(u User) {
+func TasksChoice(u User) error {
 	for {
-		var choice uint8
+		var choice string
 		task.AllTasks(u.ID)
 		fmt.Println("Выберите действие:")
 		fmt.Print("1. Создать задачу\n2. Изменить задачу\n3. Удалить задачу\n0. Назад\n>>")
-		fmt.Scan(&choice)
-		switch choice {
+		task.Reader(&choice)
+		ch, _ := strconv.Atoi(choice)
+		switch ch {
 		case 1:
 			task.CreateTask(u.ID)
 		case 2:
-			var taskId int
+			var taskString string
 			fmt.Print("Какую задачу хотите изменить(id задачи)?\n>>")
-			fmt.Scan(&taskId)
-			t := task.Read(taskId)
+			task.Reader(&taskString)
+			taskId, err := strconv.Atoi(taskString)
+			if err != nil {
+				return err
+			}
+			fmt.Println("-------------")
+			t, err := task.Read(u.ID, taskId)
+			if err != nil {
+				return err
+			}
 			t.Update()
 		case 3:
 			var (
-				taskId   int
-				isDelete string
+				taskString string
+				isDelete   string
 			)
 
 			fmt.Print("Какую задачу хотите удалить(id задачи)?\n>>")
-			fmt.Scan(&taskId)
-			t := task.Read(taskId)
+			task.Reader(&taskString)
+			taskId, err := strconv.Atoi(taskString)
+			if err != nil {
+				return err
+			}
+			t, err := task.Read(u.ID, taskId)
+			if err != nil {
+				return err
+			}
 			fmt.Print("Вы уверены, что хотите удалить эту задачу(Y/N)?\n>>")
-			fmt.Scan(&isDelete)
+			task.Reader(&isDelete)
 			switch isDelete {
 			case "Y", "y", "yes", "Yes", "YES", "Да", "да", "д", "Д":
 				t.Delete()
 			case "N", "n", "no", "No", "NO", "Нет", "нет", "н", "Н":
-				return
+				return nil
 			default:
 				fmt.Println("Введите Y или N!")
 			}
 		case 0:
-			return
+			return nil
 		default:
 			fmt.Println("Введите 0-3!")
 		}
 	}
 }
 
-func SettingsChoice(u User) {
+func SettingsChoice(u *User) {
 	for {
-		var choice uint8
+		var mainChoice string
 		fmt.Println("Выберите действие:")
 		fmt.Print("1. Изменить свои данные аккаунта\n2. Удалить аккаунт\n0. Назад\n>> ")
-		fmt.Scan(&choice)
-		switch choice {
+		task.Reader(&mainChoice)
+		mCh, _ := strconv.Atoi(mainChoice)
+		switch mCh {
 		case 1:
 			fmt.Println("Аккаунт\n----------")
-			var choice uint8
+			var editChoice string
 			var login, name, password string
 			fmt.Println("Что хотите изменить?")
 			fmt.Print("1. Логин\n2. Имя\n3. Пароль\n4. Все данные\n0. Назад\n>> ")
-			switch choice {
+			task.Reader(&editChoice)
+			eCh, _ := strconv.Atoi(editChoice)
+			switch eCh {
 			case 1:
 				//login
 				fmt.Print("Введите новый логин:\n>>")
-				fmt.Scan(&login)
-				u.Login = login
-				u.Update()
+				task.Reader(&login)
+				_, err := Read(login)
+				if err == nil {
+					fmt.Println("Пользователь с таким логином уже существует")
+					return
+				}
+
+				u.ChangeLogin(login)
 			case 2:
 				//name
 				fmt.Print("Введите новое имя:\n>>")
-				fmt.Scan(&name)
+				task.Reader(&name)
 				u.Name = name
 				u.Update()
 			case 3:
 				//password
 				fmt.Print("Введите новый пароль:\n>>")
-				fmt.Scan(&password)
+				task.Reader(&password)
 				u.Password = password
 				u.Update()
 			case 4:
 				//all
 				fmt.Print("Введите новый логин:\n>>")
-				fmt.Scan(&login)
-				u.Login = login
+				task.Reader(&login)
+				_, err := Read(login)
+				if err == nil {
+					fmt.Println("Пользователь с таким логином уже существует")
+					return
+				}
+
+				u.ChangeLogin(login)
 
 				fmt.Print("Введите новое имя:\n>>")
-				fmt.Scan(&name)
+				task.Reader(&name)
 				u.Name = name
 
 				fmt.Print("Введите новый пароль:\n>>")
-				fmt.Scan(&password)
+				task.Reader(&password)
 				u.Password = password
 
 				u.Update()
 			case 0:
 				//back
-				return
+				break
 			default:
 				fmt.Print("\nВведите только число 0-4!")
 			}
 		case 2:
 			var isDelete string
 			fmt.Print("Вы уверены, что хотите удалить аккаунт(Y/N)?\n>>")
-			fmt.Scan(&isDelete)
+			task.Reader(&isDelete)
 			switch isDelete {
 			case "Y", "y", "yes", "Yes", "YES", "Да", "да", "д", "Д":
 				u.Delete()

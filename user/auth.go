@@ -2,14 +2,16 @@ package user
 
 import (
 	"fmt"
+	"strconv"
+	"todo/task"
 )
 
 func Login() (User, error) {
 	var login, password string
 	fmt.Print("Введите ваш логин:\n>>")
-	fmt.Scan(&login)
+	task.Reader(&login)
 	fmt.Print("Введите пароль:\n>>")
-	fmt.Scan(&password)
+	task.Reader(&password)
 	u, err := Read(login)
 	if err != nil {
 		return User{}, err
@@ -21,17 +23,19 @@ func Login() (User, error) {
 }
 func Register() error {
 	var login, name, password string
+
+	fmt.Print("Введите логин:\n>>")
+	task.Reader(&login)
+
 	_, err := Read(login)
 	if err == nil {
 		return fmt.Errorf("Пользователь с таким логином уже существует")
 	}
 
-	fmt.Print("Введите логин:\n>>")
-	fmt.Scan(&login)
 	fmt.Print("Ваше Имя:\n>>")
-	fmt.Scan(&name)
+	task.Reader(&name)
 	fmt.Print("Пароль:\n>>")
-	fmt.Scan(&password)
+	task.Reader(&password)
 	Create(login, password, name)
 	fmt.Println("Пользователь успешно создан!")
 	return nil
@@ -39,10 +43,11 @@ func Register() error {
 
 func AuthFlow() (User, uint8) {
 	for {
-		var signIn uint8
+		var signIn string
 		fmt.Print("1. Войти\n2. Зарегистрироваться\n>> ")
-		fmt.Scan(&signIn)
-		switch signIn {
+		task.Reader(&signIn)
+		sIn, _ := strconv.Atoi(signIn)
+		switch sIn {
 		case 1:
 			fmt.Println("Вход")
 			u, err := Login()

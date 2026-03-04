@@ -1,9 +1,12 @@
 package user
 
-import "fmt"
+import (
+	"fmt"
+	"todo/task"
+)
 
 var Users = make(map[string]User)
-var ID = 0
+var nextUserID = 0
 
 type User struct {
 	ID       int
@@ -13,23 +16,25 @@ type User struct {
 }
 
 func Create(login, password, name string) {
-	for _, v := range Users {
-		if v.ID > 0 {
-			ID = v.ID + 1
-		} else {
-			ID += 1
-		}
-	}
+	nextUserID++
 	var u User = User{
-		ID:       ID,
+		ID:       nextUserID,
 		Login:    login,
 		Name:     name,
 		Password: password}
 	Users[login] = u
+	task.UserTaskIDs[u.ID] = 0
 }
 
 func (u *User) Update() {
 	Users[u.Login] = *u
+}
+
+func (u *User) ChangeLogin(newLogin string) {
+	oldLogin := u.Login
+	u.Login = newLogin
+	u.Update()
+	delete(Users, oldLogin)
 }
 
 func (u *User) Delete() {

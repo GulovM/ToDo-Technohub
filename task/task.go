@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
 var Tasks = make(map[int]Task)
-var ID, UserTaskID = 0, 0
+
+var UserTaskIDs = make(map[int]int)
+var nextTaskID = 0
 
 type Task struct {
 	Status      bool
@@ -22,25 +25,14 @@ type Task struct {
 
 func Create(title, description, deadline string, UserID int) {
 	var t Task
-	for _, v := range Tasks {
-		if v.UserID == UserID {
-			if v.UserTaskID > 0 {
-				UserTaskID = v.UserTaskID + 1
-			} else {
-				UserTaskID += 1
-			}
-		}
-	}
-	if UserTaskID == 0 {
-		UserTaskID += 1
-	}
-	ID += 1
+	nextTaskID++
+	UserTaskIDs[UserID] += 1
 	t.Title = title
 	t.Description = description
 	t.Status = false
 	t.Deadline = deadline
-	t.ID = ID
-	t.UserTaskID = UserTaskID
+	t.ID = nextTaskID
+	t.UserTaskID = UserTaskIDs[UserID]
 	t.UserID = UserID
 	Tasks[t.ID] = t
 }
@@ -48,26 +40,25 @@ func Create(title, description, deadline string, UserID int) {
 func CreateTask(UserID int) {
 	var title, description, deadline string
 	fmt.Print("Заголовок задачи:\n>>")
-	fmt.Scan(&title)
+	Reader(&title)
 	fmt.Print("Описание задачи:\n>>")
-	fmt.Scan(&description)
+	Reader(&description)
 	fmt.Print("Дедлайн задачи:\n>>")
-	fmt.Scan(&deadline)
+	Reader(&deadline)
 	Create(title, description, deadline, UserID)
 	fmt.Println("Задача успешно создана!")
 }
 
 func (t *Task) Update() {
-	var title, description, deadline string
-	var status bool
+	var title, description, deadline, status string
 	fmt.Print("Заголовок задачи(enter - пропустить):\n>>")
-	reader(&title)
+	Reader(&title)
 	fmt.Print("Описание задачи(enter - пропустить):\n>>")
-	reader(&description)
+	Reader(&description)
 	fmt.Print("Дедлайн задачи(enter - пропустить):\n>>")
-	reader(&deadline)
+	Reader(&deadline)
 	fmt.Print("Статус задачи(true - выполнен, false - не выполнен:\n>>")
-	fmt.Scan(&status)
+	Reader(&status)
 	if title != "" {
 		t.Title = title
 	}
@@ -77,7 +68,12 @@ func (t *Task) Update() {
 	if deadline != "" {
 		t.Deadline = deadline
 	}
-	t.Status = status
+	st, err := strconv.ParseBool(status)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	t.Status = st
 	Tasks[t.ID] = *t
 }
 
@@ -85,13 +81,13 @@ func (t *Task) Delete() {
 	delete(Tasks, t.ID)
 }
 
-func Read(taskID int) Task {
+func Read(userID, taskID int) (Task, error) {
 	for _, v := range Tasks {
-		if v.UserTaskID == taskID {
-			return v
+		if v.UserTaskID == taskID && v.UserID == userID {
+			return v, nil
 		}
 	}
-	return Task{}
+	return Task{}, fmt.Errorf("Задача не найдена.")
 }
 
 func AllTasks(UserID int) {
@@ -104,7 +100,7 @@ func AllTasks(UserID int) {
 	}
 }
 
-func reader(input *string) string {
+func Reader(input *string) string {
 	reader := bufio.NewReader(os.Stdin)
 	*input, _ = reader.ReadString('\n')
 	*input = strings.TrimSpace(*input)
