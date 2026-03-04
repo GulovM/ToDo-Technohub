@@ -1,7 +1,10 @@
 package task
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 )
 
 var Tasks = make(map[int]Task)
@@ -58,11 +61,11 @@ func (t *Task) Update() {
 	var title, description, deadline string
 	var status bool
 	fmt.Print("Заголовок задачи(enter - пропустить):\n>>")
-	fmt.Scan(&title)
+	reader(&title)
 	fmt.Print("Описание задачи(enter - пропустить):\n>>")
-	fmt.Scan(&description)
+	reader(&description)
 	fmt.Print("Дедлайн задачи(enter - пропустить):\n>>")
-	fmt.Scan(&deadline)
+	reader(&deadline)
 	fmt.Print("Статус задачи(true - выполнен, false - не выполнен:\n>>")
 	fmt.Scan(&status)
 	if title != "" {
@@ -99,4 +102,11 @@ func AllTasks(UserID int) {
 			fmt.Println("-------------")
 		}
 	}
+}
+
+func reader(input *string) string {
+	reader := bufio.NewReader(os.Stdin)
+	*input, _ = reader.ReadString('\n')
+	*input = strings.TrimSpace(*input)
+	return *input
 }
