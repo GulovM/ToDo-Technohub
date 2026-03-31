@@ -1,17 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"todo/user"
+	"log"
+	"net/http"
+	"todo/handler"
 )
 
 func main() {
-	for {
-		fmt.Println("Добро пожаловать в трекер задач!\n0 - выйти из программы")
-		u, i := user.AuthFlow()
-		if i == 0 {
-			return
-		}
-		user.ActionsFlow(u)
-	}
+	addr := ":8080"
+	log.Printf("HTTP server started on %s", addr)
+	log.Fatal(http.ListenAndServe(addr, handler.NewRouter()))
 }
